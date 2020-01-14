@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+let lieux = "";
 var app = {
     // Application Constructor
     initialize: function() {
@@ -32,7 +34,7 @@ var app = {
     
     // Update DOM on a Received Event
     receivedEvent: function(id) {
-    
+        
         function distance(lat1, lon1, lat2, lon2, unit) {
             if ((lat1 == lat2) && (lon1 == lon2)) {
                 return 0;
@@ -55,10 +57,19 @@ var app = {
             }
         }
         
+        $.ajax({
+            url: "https://devweb.iutmetz.univ-lorraine.fr/~gonzal124u/LieuxMetz/php/getAll.php",
+            type: "GET",
+            success: function (result) {
+                lieux = JSON.parse(result);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+        
         var onSuccess = function(position) {
-            lat = position.coords.latitude;
-            long = position.coords.longitude;
-            alert('Latitude: '          + position.coords.latitude          + '\n' +
+            console.log('Latitude: '          + position.coords.latitude          + '\n' +
             'Longitude: '         + position.coords.longitude         + '\n' +
             'Altitude: '          + position.coords.altitude          + '\n' +
             'Accuracy: '          + position.coords.accuracy          + '\n' +
@@ -66,11 +77,26 @@ var app = {
             'Heading: '           + position.coords.heading           + '\n' +
             'Speed: '             + position.coords.speed             + '\n' +
             'Timestamp: '         + position.timestamp                + '\n');
+
+            latUser = position.coords.latitude;
+            lngUser = position.coords.longitude;
+
             
-            console.log(lat+" / "+long);
-            console.log(distance(47.6333, 6.8667, 49.1191, 6.1727, "K"))
-            
-            var mymap = L.map('mapid').setView([49.1191, 6.1727], 13);
+
+            for( let i = 0; i<lieux.length; i++){
+                latLieu = lieux[i]["latitude"];
+                lngLieu = lieux[i]["longitude"];
+                dist = (distance(latLieu,lngLieu, latUser, lngUser, "K")*1000).toFixed(0);
+                console.log(dist);
+                
+                if (dist < 10){
+                    $('#exampleModal').modal('toggle');
+                }
+            }
+
+        };
+
+        var mymap = L.map('mapid').setView([49.1191, 6.1727], 13);
             L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
                 attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
                 maxZoom: 18,
@@ -78,15 +104,21 @@ var app = {
                 accessToken: 'pk.eyJ1IjoiZHJjb21ibyIsImEiOiJjazViMHVpY2Ywc2QyM2ZwazdtNW9xNmZjIn0.s0IQl94VBUyolsiDA1LZTg'
             }).addTo(mymap);
 
-
-        };
-        
         function onError(error) {
             alert('code: '    + error.code    + '\n' +
             'message: ' + error.message + '\n');
         }
 
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        
+
+        var intervalID = window.setInterval(refresh, 5000);
+
+        function refresh(){
+            navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        }
+
+
+        
     }
 };
 
