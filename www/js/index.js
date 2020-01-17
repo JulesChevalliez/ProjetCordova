@@ -82,12 +82,14 @@ var app = {
             lngUser = position.coords.longitude;
 
             
+            //navigator.vibrate([500, 100, 500, 100, 500, 100, 750]);
 
             for( let i = 0; i<lieux.length; i++){
                 latLieu = lieux[i]["latitude"];
                 lngLieu = lieux[i]["longitude"];
                 dist = (distance(latLieu,lngLieu, latUser, lngUser, "K")*1000).toFixed(0);
                 console.log(dist);
+                $('#test').append("<p>lat: "+latUser+" / lng : "+lngUser+"</p>");
                 
                 if (dist < 10){
                     $('#exampleModal').modal('toggle');
