@@ -115,8 +115,8 @@ position: absolute;}
     z-index: 9999;
 }
 
-#btnCloseInfo{
-    margin-bottom: 20px;
+.btnStopIti{
+    margin-bottom: 5px;
 }
 
 .carousel{

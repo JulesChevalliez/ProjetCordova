@@ -35,6 +35,19 @@ var app = {
     // Update DOM on a Received Event
     receivedEvent: function (id) {
 
+
+        closeInfoVar = false;
+        markerLoaded = false;
+        itineraire = false;
+        addBtnStopIti = false;
+        oldLocationUser = [];
+        latUser = null;
+        lngUser = null;
+        latLieu = null;
+        lngLieu = null;
+
+        $('#cardInfo').hide();
+
         function distance(lat1, lon1, lat2, lon2, unit) {
             if ((lat1 == lat2) && (lon1 == lon2)) {
                 return 0;
@@ -75,10 +88,7 @@ var app = {
             }
         });
 
-        closeInfoVar = false;
-        markerLoaded = false;
-        oldLocationUser = [];
-        $('#cardInfo').hide();
+
 
         function openInfo(lieux) {
             $('.card-content').append('<h5 class="crad-title">' + lieux['nom'] + '</h5>');
@@ -95,15 +105,23 @@ var app = {
             $('#cardInfo').show();
         }
 
+        var mymap = L.map('mapid').setView([49.1191, 6.1727], 13);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox/outdoors-v11',
+            accessToken: 'pk.eyJ1IjoiZHJjb21ibyIsImEiOiJjazViMHVpY2Ywc2QyM2ZwazdtNW9xNmZjIn0.s0IQl94VBUyolsiDA1LZTg'
+        }).addTo(mymap);
+
         var onSuccess = function (position) {
-            console.log('Latitude: ' + position.coords.latitude + '\n' +
-                'Longitude: ' + position.coords.longitude + '\n' +
-                'Altitude: ' + position.coords.altitude + '\n' +
-                'Accuracy: ' + position.coords.accuracy + '\n' +
-                'Altitude Accuracy: ' + position.coords.altitudeAccuracy + '\n' +
-                'Heading: ' + position.coords.heading + '\n' +
-                'Speed: ' + position.coords.speed + '\n' +
-                'Timestamp: ' + position.timestamp + '\n');
+            // console.log('Latitude: ' + position.coords.latitude + '\n' +
+            //     'Longitude: ' + position.coords.longitude + '\n' +
+            //     'Altitude: ' + position.coords.altitude + '\n' +
+            //     'Accuracy: ' + position.coords.accuracy + '\n' +
+            //     'Altitude Accuracy: ' + position.coords.altitudeAccuracy + '\n' +
+            //     'Heading: ' + position.coords.heading + '\n' +
+            //     'Speed: ' + position.coords.speed + '\n' +
+            //     'Timestamp: ' + position.timestamp + '\n');
 
             latUser = position.coords.latitude;
             lngUser = position.coords.longitude;
@@ -113,11 +131,52 @@ var app = {
 
             if (typeof oldLocationUser !== 'undefined' && oldLocationUser.length > 0) {
                 distOldUser = (distance(oldLocationUser[0], oldLocationUser[1], latUser, lngUser, "K") * 1000).toFixed(0)
-                console.log("Dist Old : "+distOldUser);
-                if(distOldUser > 100){
+                // console.log("Dist Old : " + distOldUser);
+                if (distOldUser > 100) {
                     closeInfoVar = false;
                 }
             }
+
+            if (itineraire == false) {
+                $("#btnItineraire").click(function () {
+                    console.log("latUser : " + latUser + "/ lngUser : " + lngUser + "/ latLieu : " + latLieu + "/ lngLieu : " + lngLieu);
+                    L.Routing.control({
+                        waypoints: [
+                            L.latLng(latUser, lngUser),
+                            L.latLng(latLieu, lngLieu)
+                        ],
+                    }).addTo(mymap);
+
+                    $('.card-content').empty();
+                    $('.card-img').empty();
+                    $('.carousel-indicators').empty();
+                    $('#cardInfo').hide();
+
+                    console.log($('.leaflet-routing-alt'));
+                    containerRoute = $(".leaflet-top.leaflet-right");
+
+                    while (containerRoute[0].childNodes.length > 1) {
+                        containerRoute[0].removeChild(containerRoute[0].lastChild);
+                    }
+
+                    
+
+
+                    itineraire = true;
+                });
+
+
+            };
+
+            if (itineraire == true) {
+
+                if (addBtnStopIti == false) {
+                    console.log("tttttt");
+                    $('.leaflet-routing-alt h3').after('<button type="button" class="btn btn-light btn-sm btnStopIti" id="btnStopItineraire">Arreter Itinéraire</button>');
+                    addBtnStopIti = true;
+                }
+            }
+
 
             for (let i = 0; i < lieux.length; i++) {
 
@@ -129,37 +188,33 @@ var app = {
 
                 if (dist < 100) {
 
-                    L.map('mapid').setZoom(5);
+                    // mymap.flyTo([latLieu,lngLieu],17);
+                    setTimeout(() => {
+                        if (!closeInfoVar) {
+                            console.log(closeInfoVar);
+                            $('.card-content').append('<h5 class="crad-title">' + lieux[i]['nom'] + '</h5>');
+                            $('.card-content').append('<div class="scrollable"><p class="card-text card-desc">' + lieux[i]['description'] + '</p></div>');
 
-                    if (!closeInfoVar) {
-                        console.log(closeInfoVar);
-                        $('.card-content').append('<h5 class="crad-title">' + lieux[i]['nom'] + '</h5>');
-                        $('.card-content').append('<div class="scrollable"><p class="card-text card-desc">' + lieux[i]['description'] + '</p></div>');
+                            for (u = 0; u < 3; u++) {
+                                $('.card-img').append('<div class="carousel-item"><img src="https://devweb.iutmetz.univ-lorraine.fr/~chevall49u/LieuxMetz/' + lieux[i]['visuel'] + '_' + u + '.jpg"><div class="carousel-caption"></div>   </div>');
+                                $('.carousel-indicators').append('<li data-target="#carouselExampleIndicators" data-slide-to="' + u + '"></li>');
+                            }
 
-                        for (u = 0; u < 3; u++) {
-                            $('.card-img').append('<div class="carousel-item"><img src="https://devweb.iutmetz.univ-lorraine.fr/~chevall49u/LieuxMetz/' + lieux[i]['visuel'] + '_' + u + '.jpg"><div class="carousel-caption"></div>   </div>');
-                            $('.carousel-indicators').append('<li data-target="#carouselExampleIndicators" data-slide-to="' + u + '"></li>');
+                            $('.carousel-item').first().addClass('active');
+                            $('.carousel-indicators > li').first().addClass('active');
+                            $('#carousel-example-generic').carousel();
+                            $('#cardInfo').show();
+                            closeInfoVar = true;
                         }
+                    }, 3500);
 
-                        $('.carousel-item').first().addClass('active');
-                        $('.carousel-indicators > li').first().addClass('active');
-                        $('#carousel-example-generic').carousel();
-                        $('#cardInfo').show();
-                        closeInfoVar = true;
-                    }
+
                 }
                 oldLocationUser = [latUser, lngUser];
             }
 
         };
 
-        var mymap = L.map('mapid').setView([49.1191, 6.1727], 13);
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox/outdoors-v11',
-            accessToken: 'pk.eyJ1IjoiZHJjb21ibyIsImEiOiJjazViMHVpY2Ywc2QyM2ZwazdtNW9xNmZjIn0.s0IQl94VBUyolsiDA1LZTg'
-        }).addTo(mymap);
 
 
 
@@ -177,6 +232,8 @@ var app = {
             $('.carousel-indicators').empty();
             $('#cardInfo').hide();
         });
+
+
 
         var intervalID = window.setInterval(refresh, 5000);
 

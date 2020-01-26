@@ -126,12 +126,16 @@ position: absolute;}
     height: 90%;
 }
 
-#btnCloseInfo{
-    margin-bottom: 20px;
+.btnCards{
     position: absolute;
-    width: 95%;
-    bottom: 0;
+    width: 100%;
+    bottom: 10px;
 }
+
+.btnStopIti{
+    margin-bottom: 5px;
+}
+
 
 .carousel{
     margin-top: 25px;
