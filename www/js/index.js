@@ -37,10 +37,10 @@ var app = {
 
 
         closeInfoVar = false;
-        markerLoaded = false;
-        itineraire = false;
-        addBtnStopIti = false;
+        zoomed = false;
+        vibrate = false;
         oldLocationUser = [];
+        lieuActuel = [];
         latUser = null;
         lngUser = null;
         latLieu = null;
@@ -91,6 +91,10 @@ var app = {
 
 
         function openInfo(lieux) {
+            $('.card-content').empty();
+            $('.card-img').empty();
+            $('.carousel-indicators').empty();
+
             $('.card-content').append('<h5 class="crad-title">' + lieux['nom'] + '</h5>');
             $('.card-content').append('<div class="scrollable"><p class="card-text card-desc">' + lieux['description'] + '</p></div>');
 
@@ -114,66 +118,17 @@ var app = {
         }).addTo(mymap);
 
         var onSuccess = function (position) {
-            // console.log('Latitude: ' + position.coords.latitude + '\n' +
-            //     'Longitude: ' + position.coords.longitude + '\n' +
-            //     'Altitude: ' + position.coords.altitude + '\n' +
-            //     'Accuracy: ' + position.coords.accuracy + '\n' +
-            //     'Altitude Accuracy: ' + position.coords.altitudeAccuracy + '\n' +
-            //     'Heading: ' + position.coords.heading + '\n' +
-            //     'Speed: ' + position.coords.speed + '\n' +
-            //     'Timestamp: ' + position.timestamp + '\n');
 
             latUser = position.coords.latitude;
             lngUser = position.coords.longitude;
 
 
-            //navigator.vibrate([500, 100, 500, 100, 500, 100, 750]);
+
 
             if (typeof oldLocationUser !== 'undefined' && oldLocationUser.length > 0) {
                 distOldUser = (distance(oldLocationUser[0], oldLocationUser[1], latUser, lngUser, "K") * 1000).toFixed(0)
-                // console.log("Dist Old : " + distOldUser);
                 if (distOldUser > 100) {
                     closeInfoVar = false;
-                }
-            }
-
-            if (itineraire == false) {
-                $("#btnItineraire").click(function () {
-                    console.log("latUser : " + latUser + "/ lngUser : " + lngUser + "/ latLieu : " + latLieu + "/ lngLieu : " + lngLieu);
-                    L.Routing.control({
-                        waypoints: [
-                            L.latLng(latUser, lngUser),
-                            L.latLng(latLieu, lngLieu)
-                        ],
-                    }).addTo(mymap);
-
-                    $('.card-content').empty();
-                    $('.card-img').empty();
-                    $('.carousel-indicators').empty();
-                    $('#cardInfo').hide();
-
-                    console.log($('.leaflet-routing-alt'));
-                    containerRoute = $(".leaflet-top.leaflet-right");
-
-                    while (containerRoute[0].childNodes.length > 1) {
-                        containerRoute[0].removeChild(containerRoute[0].lastChild);
-                    }
-
-                    
-
-
-                    itineraire = true;
-                });
-
-
-            };
-
-            if (itineraire == true) {
-
-                if (addBtnStopIti == false) {
-                    console.log("tttttt");
-                    $('.leaflet-routing-alt h3').after('<button type="button" class="btn btn-light btn-sm btnStopIti" id="btnStopItineraire">Arreter Itinéraire</button>');
-                    addBtnStopIti = true;
                 }
             }
 
@@ -187,23 +142,22 @@ var app = {
 
 
                 if (dist < 100) {
+                
 
-                    // mymap.flyTo([latLieu,lngLieu],17);
+                    if (lieuActuel.length < 1) {
+                        lieuActuel = [latLieu, lngLieu];
+                    }
+
+                    // Permet de ne pas zoomer indefiniment
+                    if (!zoomed) {
+                        mymap.flyTo([latLieu, lngLieu], 17);
+                        zoomed = true;
+                    }
+
+
                     setTimeout(() => {
                         if (!closeInfoVar) {
-                            console.log(closeInfoVar);
-                            $('.card-content').append('<h5 class="crad-title">' + lieux[i]['nom'] + '</h5>');
-                            $('.card-content').append('<div class="scrollable"><p class="card-text card-desc">' + lieux[i]['description'] + '</p></div>');
-
-                            for (u = 0; u < 3; u++) {
-                                $('.card-img').append('<div class="carousel-item"><img src="https://devweb.iutmetz.univ-lorraine.fr/~chevall49u/LieuxMetz/' + lieux[i]['visuel'] + '_' + u + '.jpg"><div class="carousel-caption"></div>   </div>');
-                                $('.carousel-indicators').append('<li data-target="#carouselExampleIndicators" data-slide-to="' + u + '"></li>');
-                            }
-
-                            $('.carousel-item').first().addClass('active');
-                            $('.carousel-indicators > li').first().addClass('active');
-                            $('#carousel-example-generic').carousel();
-                            $('#cardInfo').show();
+                            openInfo(lieux[i]);
                             closeInfoVar = true;
                         }
                     }, 3500);
@@ -214,10 +168,6 @@ var app = {
             }
 
         };
-
-
-
-
 
         function onError(error) {
             alert('code: ' + error.code + '\n' +
@@ -238,6 +188,15 @@ var app = {
         var intervalID = window.setInterval(refresh, 5000);
 
         function refresh() {
+            if (lieuActuel.length > 0) {
+                //Permet de savoir quand est-ce que l'ont peu de nouveau zoomer
+                d = (distance(lieuActuel[0], lieuActuel[1], latUser, lngUser, "K") * 1000).toFixed(0);
+                console.log(d);
+                if (d > 100) {
+                    zoomed = false;
+                    lieuActuel = [];
+                }
+            }
             navigator.geolocation.getCurrentPosition(onSuccess, onError);
         }
 

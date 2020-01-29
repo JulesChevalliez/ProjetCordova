@@ -127,6 +127,10 @@ position: absolute;}
     width: 100%;
 }
 
+.btnCards {
+    margin-bottom: 5px;
+}
+
 @media (min-width: 500px){
     .carousel-inner > .carousel-item > img {
         width: 70%;

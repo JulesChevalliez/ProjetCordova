@@ -146,11 +146,25 @@ position: absolute;}
     width: 100%;
 }
 
-@media (min-width: 500px){
-    /* .carousel-inner > .carousel-item > img {
-        width: 70%;
-        margin-left: 15%;
-    } */
+@media (min-height: 500px){
+    .carousel{
+        width: 60%;
+        margin-left: 20%;
+        max-height: 60%;
+    }
+
+    .carousel-inner{
+        height: 100%;
+    }
+
+    .card-body{
+        position: relative;
+        margin-left: 0;
+    }
+
+    #cardInfo{
+        height: 80%;
+    }
 }
 
 
